@@ -3,78 +3,131 @@ const router = express.Router();
 const HubController = require('../controllers/HubController');
 
 /**
- * @openapi
- * /api/register:
- * post:
- * tags:
- * - Centro de Distribuição
- * summary: Credencia um novo CD no HUB
- * description: Rota para um novo Centro de Distribuição se registrar no sistema. O HUB verifica a disponibilidade e atividade do CD antes de confirmar o registro.
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/CentroDistribuicao'
- * responses:
- * '201':
- * description: CD credenciado com sucesso.
- * '400':
- * description: Dados insuficientes para registro (nome, ip ou porta faltando).
- * '409':
- * description: Conflito. Um CD com o mesmo nome ou endereço já existe.
- * '500':
- * description: Erro interno no servidor, possivelmente falha ao se comunicar com a API do CD.
+ * @swagger
+ * components:
+ *   schemas:
+ *     CentroDistribuicao:
+ *       type: object
+ *       required:
+ *         - nome
+ *         - endereco
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID do CD.
+ *         nome:
+ *           type: string
+ *           description: Nome do CD.
+ *         endereco:
+ *           type: object
+ *           properties:
+ *             ip:
+ *               type: string
+ *               example: "192.168.1.10"
+ *             porta:
+ *               type: integer
+ *               example: 3001
+ *         status:
+ *           type: string
+ *           enum: [ativo, inativo]
+ *           default: ativo
  */
-router.post('/register', HubController.register);
 
 /**
- * @openapi
- * /api/consulta-estoque:
- * post:
- * tags:
- * - Estoque
- * summary: Consulta CDs com estoque de um produto
- * description: Rota utilizada por um CD (solicitante) para pedir ao HUB uma lista de outros CDs que possuem um determinado produto em quantidade suficiente.
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * sku:
- * type: string
- * example: "PN-007"
- * quantidadeNecessaria:
- * type: integer
- * example: 100
- * solicitante:
- * $ref: '#/components/schemas/Endereco'
- * responses:
- * '200':
- * description: Uma lista de CDs fornecedores que atendem aos critérios. A lista pode estar vazia.
- * '400':
- * description: Parâmetros obrigatórios (sku, quantidadeNecessaria, solicitante) não foram fornecidos.
- * '500':
- * description: Erro interno no HUB.
+ * @swagger
+ * /credenciar:
+ *   post:
+ *     summary: Credencia um novo Centro de Distribuição no HUB.
+ *     tags: [HUB]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CentroDistribuicao'
+ *           example:
+ *             nome: "CD Rio de Janeiro"
+ *             endereco:
+ *               ip: "192.168.1.11"
+ *               porta: 3002
+ *     responses:
+ *       201:
+ *         description: CD credenciado com sucesso.
+ *       400:
+ *         description: CD já credenciado.
  */
-router.post('/consulta-estoque', HubController.consultarEstoqueEmCDs);
+router.post('/credenciar', HubController.credenciar);
 
 /**
- * @openapi
- * /api/cds:
- * get:
- * tags:
- * - Centro de Distribuição
- * summary: Lista todos os CDs cadastrados
- * description: Retorna uma lista de todos os Centros de Distribuição que já se registraram no HUB, incluindo seu status de atividade.
- * responses:
- * '200':
- * description: Lista de CDs retornada com sucesso.
- * '500':
- * description: Erro interno no servidor.
+ * @swagger
+ * /centros:
+ *   get:
+ *     summary: Lista todos os Centros de Distribuição ativos.
+ *     tags: [HUB]
+ *     responses:
+ *       200:
+ *         description: Lista de CDs ativos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CentroDistribuicao'
+ *       500:
+ *         description: Erro ao buscar CDs.
  */
-router.get('/cds', HubController.listarCDs);
+router.get('/centros', HubController.listarCentrosAtivos);
+
+/**
+ * @swagger
+ * /produtos:
+ *   get:
+ *     summary: Verifica quais CDs possuem um produto com quantidade necessária.
+ *     tags: [HUB]
+ *     parameters:
+ *       - in: query
+ *         name: sku
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: SKU do produto.
+ *       - in: query
+ *         name: quantidade
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Quantidade necessária do produto.
+ *       - in: header
+ *         name: x-cd-solicitante-endereco
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Endereço IP:PORTA do CD solicitante.
+ *     responses:
+ *       200:
+ *         description: Lista de CDs que possuem o produto.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   nome:
+ *                     type: string
+ *                   endereco:
+ *                     type: string
+ *                   sku:
+ *                     type: string
+ *                   quantidadeDisponivel:
+ *                     type: integer
+ *                   valor:
+ *                     type: number
+ *       400:
+ *         description: Requisição inválida.
+ *       500:
+ *         description: Erro interno no servidor.
+ */
+router.get('/produtos', HubController.findProdutoEmOutrosCDs);
 
 module.exports = router;

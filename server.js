@@ -1,3 +1,4 @@
+// hub-and-cd/server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -12,10 +13,7 @@ const swaggerSpecs = require('./src/config/swaggerConfig');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Conectar ao Banco de Dados
 connectDB();
-
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
@@ -23,10 +21,7 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 // ----------------------------------------
 
-// Rotas
 app.use('/api', hubRoutes);
-
-// Rota raiz
 app.get('/', (req, res) => {
     res.send('API do HUB está funcionando! Acesse /api-docs para ver a documentação.');
 });

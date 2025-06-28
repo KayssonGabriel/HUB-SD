@@ -6,7 +6,7 @@ const CentroDistribuicaoSchema = new mongoose.Schema({
         ip: { type: String, required: true },
         porta: { type: Number, required: true },
     },
-    ativo: { type: Boolean, default: false },
+    status: { type: String, enum: ['ativo', 'inativo'], default: 'ativo' },
     ultimaVerificacao: { type: Date }
 }, { timestamps: true });
 

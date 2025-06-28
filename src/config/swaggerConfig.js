@@ -1,3 +1,4 @@
+// hub-and-cd/src/config/swaggerConfig.js
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
