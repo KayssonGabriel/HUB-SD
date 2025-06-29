@@ -200,10 +200,15 @@ class HubController {
                 transacao 
             });
         } catch (error) {
+            if (error.name === 'ValidationError') {
+                return res.status(400).json({
+                    erro: 'Dados da transação inválidos.',
+                    campos: Object.keys(error.errors)
+                });
+            }
             console.error('Erro ao registrar transação:', error);
-            res.status(500).json({ 
-                erro: 'Erro ao registrar transação.',
-                detalhes: error.message 
+            return res.status(500).json({
+                erro: 'Erro ao registrar transação.'
             });
         }
     }
