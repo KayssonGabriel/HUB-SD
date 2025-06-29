@@ -1,0 +1,7 @@
+{
+  "nome": "CD Rio de Janeiro NOVO",
+  "endereco": {
+    "ip": "localhost",
+    "porta": 3006
+  }
+}
